@@ -10,9 +10,11 @@ namespace runasWindows {
 	using v8::Function;
 	using v8::FunctionCallbackInfo;
 	using v8::Isolate;
+	using v8::Handle;
 	using v8::Local;
 	using v8::Null;
 	using v8::Object;
+	using v8::Array;
 	using v8::String;
 	using v8::Value;
 	using v8::Exception;
@@ -52,15 +54,28 @@ namespace runasWindows {
 		return std::string("\"") + std::string(quoted.rbegin(), quoted.rend()) + '"';
 	}
 
+	std::string GetArguments(Local<Value> arr) {
+		auto array = v8::Handle<v8::Array>::Cast(arr);
+
+		std::string arguments;
+
+		for (auto i = 0; i < array->Length(); i++)
+		{
+			arguments += QuoteCmdArg(*String::Utf8Value(array->Get(i))) + " ";
+		}
+
+		return arguments;		
+	}
+
 	void Run(const FunctionCallbackInfo<Value>& args) {
-		Isolate* isolate = args.GetIsolate();
+		auto isolate = args.GetIsolate();
 
 		if (args.Length() < 4) {
 			isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong number of arguments")));
 			return;
 		}
 
-		if (!args[0]->IsString() || !args[1]->IsString() || !args[2]->IsObject() || !args[3]->IsFunction()) {
+		if (!args[0]->IsString() || !args[1]->IsArray() || !args[2]->IsObject() || !args[3]->IsFunction()) {
 			isolate->ThrowException(Exception::TypeError(String::NewFromUtf8(isolate, "Wrong arguments")));
 			return;
 		}
@@ -86,11 +101,8 @@ namespace runasWindows {
 			shExInfo.lpVerb = _T("open");
 		}
 
-
-
 		std::string programm = *String::Utf8Value(args[0]);
-		std::string programmParams = QuoteCmdArg(*String::Utf8Value(args[1]));
-
+		auto programmParams = GetArguments(args[1]);
 		
 		shExInfo.cbSize = sizeof(shExInfo);
 		shExInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
@@ -105,13 +117,13 @@ namespace runasWindows {
 			WaitForSingleObject(shExInfo.hProcess, INFINITE);
 			CloseHandle(shExInfo.hProcess);
 
-			Local<Function> cb = Local<Function>::Cast(args[3]);
+			auto cb = Local<Function>::Cast(args[3]);
 			cb->Call(Null(isolate), 0, {});
 		}
 	}
 
 	void Init(Local<Object> exports, Local<Object> module) {
-		Isolate* isolate = Isolate::GetCurrent();
+		auto isolate = Isolate::GetCurrent();
 
 		exports->Set(String::NewFromUtf8(isolate, "run"),
 			FunctionTemplate::New(isolate, Run)->GetFunction());
