@@ -14,7 +14,7 @@ npm install runas-win
 ```js
 import runasPromise from 'runas-win'
 
-runasPromise('node', [-v'], {hide:false, admin:true})
+runasPromise('node', ['-v'], {hide:false, admin:true})
     .then(()=>console.log('finish'));
 ```
 
