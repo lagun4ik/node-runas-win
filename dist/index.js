@@ -21,5 +21,5 @@ exports.default = (command, args, options) => new Promise((resolve, reject) => {
         reject('not transferred to the command to carry out');
     }
 
-    require('../build/Release/runas-wind.node').run(command, args, options, () => resolve());
+    require('../build/Release/runas-win.node').run(command, args, options, () => resolve());
 });
