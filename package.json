@@ -1,6 +1,6 @@
 {
   "name": "runas-win",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Promise for run command with administrator privilege and hide mode.",
   "main": "dist/index.js",
   "dependencies": {
